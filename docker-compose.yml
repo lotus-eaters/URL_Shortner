@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: url_shortener_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: url_shortener
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - url_shortener_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: url_shortener_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - url_shortener_network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: url_shortener_api
+    environment:
+      MONGODB_URL: mongodb://admin:password@mongodb:27017/
+      MONGODB_DB_NAME: url_shortener
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: your-super-secret-key-change-in-production
+      DEBUG: "True"
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - url_shortener_network
+    volumes:
+      - .:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: url_shortener_prometheus
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - url_shortener_network
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+
+  # Grafana Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: url_shortener_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - url_shortener_network
+    depends_on:
+      - prometheus
+
+networks:
+  url_shortener_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
