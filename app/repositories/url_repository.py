@@ -58,14 +58,20 @@ class URLRepository:
                 return None
             
             # Create URL document
+            # Ensure user_id is ObjectId
+            if isinstance(user_id, str):
+                user_id = ObjectId(user_id)
+            
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
             url_doc = {
-                "user_id": ObjectId(user_id),
+                "user_id": user_id,
                 "original_url": url_create.original_url,
                 "short_code": url_create.short_code,
                 "click_count": 0,
                 "is_active": True,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow(),
+                "created_at": now,
+                "updated_at": now,
                 "expires_at": url_create.expires_at
             }
             
@@ -186,7 +192,8 @@ class URLRepository:
         """
         try:
             # Always update the updated_at timestamp
-            update_data["updated_at"] = datetime.utcnow()
+            from datetime import datetime, timezone
+            update_data["updated_at"] = datetime.now(timezone.utc)
             
             result = await self.collection.find_one_and_update(
                 {"_id": ObjectId(url_id)},
@@ -214,9 +221,10 @@ class URLRepository:
             bool: True if deleted, False otherwise
         """
         try:
+            from datetime import datetime, timezone
             result = await self.collection.find_one_and_update(
                 {"_id": ObjectId(url_id)},
-                {"$set": {"is_active": False, "updated_at": datetime.utcnow()}},
+                {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc)}},
                 return_document=True
             )
             

@@ -3,19 +3,29 @@ MongoDB Models
 Pydantic models for database documents
 """
 
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
+from pydantic import BaseModel, Field, EmailStr, field_validator
+from typing import Optional, Annotated
 from datetime import datetime, timezone
 from bson import ObjectId
 
 
 class PyObjectId(ObjectId):
     """
-    Custom type for BSON ObjectId
+    Custom type for BSON ObjectId for Pydantic V2
     """
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        from pydantic_core import core_schema
+        return core_schema.no_info_after_validator_function(
+            cls.validate,
+            core_schema.union_schema([
+                core_schema.is_instance_schema(ObjectId),
+                core_schema.chain_schema([
+                    core_schema.str_schema(),
+                    core_schema.no_info_plain_validator_function(cls.validate),
+                ]),
+            ]),
+        )
 
     @classmethod
     def validate(cls, v):
@@ -83,8 +93,8 @@ class URL(URLCreate):
     user_id: PyObjectId
     click_count: int = 0
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     class Config:
         populate_by_name = True

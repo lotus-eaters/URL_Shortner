@@ -90,7 +90,8 @@ class URLService:
             
             # Set default expiration if not provided
             if expires_at is None:
-                expires_at = datetime.utcnow() + timedelta(days=DEFAULT_URL_EXPIRATION_DAYS)
+                from datetime import datetime, timezone
+                expires_at = datetime.now(timezone.utc) + timedelta(days=DEFAULT_URL_EXPIRATION_DAYS)
                 logger.debug(f"No expiration provided, setting default: {expires_at}")
             
             # Create URL in database

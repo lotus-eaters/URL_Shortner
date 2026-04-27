@@ -5,7 +5,7 @@ These are what FastAPI uses to validate and serialize data
 
 from pydantic import BaseModel, HttpUrl, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 
 # ============= User Schemas =============
@@ -13,8 +13,8 @@ from typing import Optional
 class UserCreate(BaseModel):
     """Schema for user registration"""
     email: str = Field(..., description="User email address")
+    username: str = Field(..., description="Username for the account")
     password: str = Field(..., min_length=8, description="User password (min 8 chars)")
-    full_name: Optional[str] = Field(None, description="User's full name")
 
 
 class UserLogin(BaseModel):
@@ -27,7 +27,7 @@ class UserResponse(BaseModel):
     """Schema for user response"""
     id: str = Field(..., alias="_id", description="User ID")
     email: str
-    full_name: Optional[str] = None
+    username: str
     created_at: datetime
     
     class Config:
@@ -47,8 +47,9 @@ class TokenResponse(BaseModel):
 
 class URLCreate(BaseModel):
     """Schema for creating a shortened URL"""
-    original_url: HttpUrl = Field(..., description="Original URL to shorten")
-    custom_code: Optional[str] = Field(None, description="Optional custom short code")
+    original_url: str = Field(..., description="Original URL to shorten")
+    custom_alias: Optional[str] = Field(None, description="Optional custom short code")
+    short_code: Optional[str] = Field(None, description="Generated short code")
     expires_at: Optional[datetime] = Field(None, description="Optional URL expiration time")
     
     class Config:
@@ -127,7 +128,7 @@ class URLDetailResponse(BaseModel):
 class URLListResponse(BaseModel):
     """Schema for URL list response - used by GET /user/list"""
     total: int = Field(..., description="Total number of URLs")
-    urls: list[URLDetailResponse] = Field(..., description="List of URLs")
+    urls: List[URLDetailResponse] = Field(..., description="List of URLs")
     
     class Config:
         json_schema_extra = {

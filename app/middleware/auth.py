@@ -6,7 +6,8 @@ Middleware to check and validate JWT tokens in requests
 import logging
 from typing import Optional
 from fastapi import HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthenticationCredentials
+from fastapi.security import HTTPBearer
+from starlette.authentication import AuthCredentials
 from app.utils.security import SecurityUtils
 
 logger = logging.getLogger(__name__)
@@ -15,12 +16,12 @@ logger = logging.getLogger(__name__)
 security = HTTPBearer()
 
 
-async def get_current_user(credentials: HTTPAuthenticationCredentials) -> dict:
+async def get_current_user(credentials: Optional[object] = None) -> dict:
     """
     Dependency to extract and verify current user from JWT token
     
     Args:
-        credentials (HTTPAuthenticationCredentials): Bearer token from request
+        credentials (Optional[object]): Bearer token from request
         
     Returns:
         dict: User data from token payload
