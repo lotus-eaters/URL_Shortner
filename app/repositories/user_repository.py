@@ -53,13 +53,15 @@ class UserRepository:
             hashed_password = SecurityUtils.hash_password(user_create.password)
             
             # Create user document
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
             user_doc = {
                 "email": user_create.email,
                 "username": user_create.username,
                 "hashed_password": hashed_password,
                 "is_active": True,
-                "created_at": user_create.created_at,
-                "updated_at": user_create.updated_at,
+                "created_at": now,
+                "updated_at": now,
             }
             
             result = await self.collection.insert_one(user_doc)

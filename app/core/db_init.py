@@ -7,7 +7,7 @@ import logging
 from app.core.config import get_settings
 from app.models.models import User, URL
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 import hashlib
 
@@ -65,8 +65,8 @@ async def seed_database(db: AsyncIOMotorDatabase) -> None:
             "username": "demo_user",
             "hashed_password": "$2b$12$example_hash_here",
             "is_active": True,
-            "created_at": datetime.now(datetime.timezone.utc),
-            "updated_at": datetime.now(datetime.timezone.utc)
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
         }
         
         result = await users_collection.insert_one(sample_user)
@@ -82,8 +82,8 @@ async def seed_database(db: AsyncIOMotorDatabase) -> None:
                 "short_code": "gfg_design",
                 "click_count": 0,
                 "is_active": True,
-                "created_at": datetime.now(datetime.timezone.utc),
-                "updated_at": datetime.now(datetime.timezone.utc),
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
                 "expires_at": None
             },
             {
@@ -93,8 +93,8 @@ async def seed_database(db: AsyncIOMotorDatabase) -> None:
                 "short_code": "gh",
                 "click_count": 0,
                 "is_active": True,
-                "created_at": datetime.now(datetime.timezone.utc),
-                "updated_at": datetime.now(datetime.timezone.utc),
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
                 "expires_at": None
             }
         ]

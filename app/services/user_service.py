@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 from app.models.models import User, UserCreate
 from app.repositories.user_repository import UserRepository
 from app.utils.security import SecurityUtils
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +70,7 @@ class UserService:
             user_create = UserCreate(
                 email=email,
                 username=username,
-                password=password,
-                created_at=datetime.now(datetime.timezone.utc),
-                updated_at=datetime.now(datetime.timezone.utc)
+                password=password
             )
             
             created_user = await self.repository.create_user(user_create)
@@ -140,7 +138,9 @@ class UserService:
                 "access_token": token,
                 "token_type": "bearer",
                 "user_id": str(user.id),
-                "email": user.email
+                "email": user.email,
+                "username": user.username,
+                "created_at": user.created_at
             }
             
         except Exception as e:
