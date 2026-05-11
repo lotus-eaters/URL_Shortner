@@ -5,7 +5,7 @@ These are what FastAPI uses to validate and serialize data
 
 from pydantic import BaseModel, HttpUrl, Field
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional,List 
 
 
 # ============= User Schemas =============

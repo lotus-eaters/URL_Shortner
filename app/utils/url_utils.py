@@ -37,7 +37,9 @@ class URLUtils:
             False
         """
         try:
-            result = urlparse(url)
+            # Convert Pydantic URL to string if needed
+            url_str = str(url)
+            result = urlparse(url_str)
             # Check if scheme is http/https and netloc exists
             is_valid = all([
                 result.scheme in ['http', 'https'],
@@ -70,13 +72,16 @@ class URLUtils:
             'mycode'
         """
         try:
+            # Convert Pydantic URL to string if needed
+            url_str = str(original_url)
+            
             # If custom alias provided, use it
             if custom_alias:
                 logger.debug(f"Using custom alias: {custom_alias}")
                 return custom_alias
             
             # MD5 hash the URL
-            md5_hash = hashlib.md5(original_url.encode()).hexdigest()
+            md5_hash = hashlib.md5(url_str.encode()).hexdigest()
             
             # Convert hex to base62-like (using our charset)
             # Take first 8 characters of hash and map to charset
@@ -212,7 +217,9 @@ class URLUtils:
             'https://example.com/PATH/'
         """
         try:
-            result = urlparse(url)
+            # Convert Pydantic URL to string if needed
+            url_str = str(url)
+            result = urlparse(url_str)
             
             # Lowercase scheme and netloc, keep path as-is
             normalized = f"{result.scheme.lower()}://{result.netloc.lower()}{result.path}"

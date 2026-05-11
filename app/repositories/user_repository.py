@@ -7,6 +7,7 @@ This is the Repository pattern - separates data access from business logic
 import logging
 from typing import Optional
 from bson import ObjectId
+from datetime import datetime, timezone
 from app.models.models import User, UserCreate
 from app.utils.security import SecurityUtils
 
@@ -60,8 +61,8 @@ class UserRepository:
                 "username": user_create.username,
                 "hashed_password": hashed_password,
                 "is_active": True,
-                "created_at": now,
-                "updated_at": now,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
             }
             
             result = await self.collection.insert_one(user_doc)
@@ -69,7 +70,14 @@ class UserRepository:
             
             # Retrieve and return created user
             created_user = await self.collection.find_one({"_id": result.inserted_id})
-            return User(**created_user) if created_user else None
+            if created_user:
+                try:
+                    return User(**created_user)
+                except Exception as model_error:
+                    logger.error(f"Error converting user doc to model: {model_error}")
+                    logger.error(f"User doc: {created_user}")
+                    raise
+            return None
             
         except Exception as e:
             logger.error(f"Error creating user: {str(e)}")

@@ -273,3 +273,46 @@ class URLRepository:
         except Exception as e:
             logger.error(f"Error counting user URLs: {str(e)}")
             return 0
+    
+    async def get_urls_by_user_id(
+        self,
+        user_id: str,
+        limit: int = 50,
+        skip: int = 0
+    ) -> Optional[List[URL]]:
+        """
+        Get all URLs created by a user with pagination
+        
+        Args:
+            user_id (str): User ID
+            limit (int): Number of results to return
+            skip (int): Number of results to skip (for pagination)
+            
+        Returns:
+            Optional[List[URL]]: List of URL objects
+        """
+        try:
+            # Convert user_id string to ObjectId if needed
+            try:
+                user_obj_id = ObjectId(user_id)
+            except:
+                user_obj_id = user_id
+            
+            cursor = self.collection.find({
+                "user_id": user_obj_id,
+                "is_active": True
+            }).skip(skip).limit(limit)
+            
+            urls = []
+            async for url_doc in cursor:
+                try:
+                    urls.append(URL(**url_doc))
+                except Exception as e:
+                    logger.error(f"Error converting URL doc to model: {e}")
+                    continue
+            
+            return urls if urls else None
+            
+        except Exception as e:
+            logger.error(f"Error getting user URLs: {str(e)}")
+            return None

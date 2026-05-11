@@ -101,7 +101,7 @@ def get_mongodb():
     Raises:
         RuntimeError: If database not initialized
     """
-    if not mongodb_db:
+    if mongodb_db is None:
         raise RuntimeError("MongoDB not initialized. Call connect_db() first.")
     return mongodb_db
 
@@ -116,7 +116,7 @@ def get_redis() -> Redis:
     Raises:
         RuntimeError: If Redis not initialized
     """
-    if not redis_client:
+    if redis_client is None:
         raise RuntimeError("Redis not initialized. Call connect_db() first.")
     return redis_client
 
