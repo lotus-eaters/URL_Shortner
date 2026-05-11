@@ -54,6 +54,8 @@ class UserRepository:
             hashed_password = SecurityUtils.hash_password(user_create.password)
             
             # Create user document
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
             user_doc = {
                 "email": user_create.email,
                 "username": user_create.username,

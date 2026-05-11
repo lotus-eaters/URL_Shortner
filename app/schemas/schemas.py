@@ -47,8 +47,9 @@ class TokenResponse(BaseModel):
 
 class URLCreate(BaseModel):
     """Schema for creating a shortened URL"""
-    original_url: HttpUrl = Field(..., description="Original URL to shorten")
-    custom_code: Optional[str] = Field(None, description="Optional custom short code")
+    original_url: str = Field(..., description="Original URL to shorten")
+    custom_alias: Optional[str] = Field(None, description="Optional custom short code")
+    short_code: Optional[str] = Field(None, description="Generated short code")
     expires_at: Optional[datetime] = Field(None, description="Optional URL expiration time")
     
     class Config:

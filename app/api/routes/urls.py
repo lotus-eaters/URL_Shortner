@@ -71,13 +71,14 @@ async def shorten_url(
         service = URLService(db)
         user_id = current_user["user_id"]
         
-        # TODO: Get custom_alias from request if provided
-        custom_alias = None
+        # Get custom_alias from request if provided
+        custom_alias = url_data.custom_alias
         
         success, message, url_data_result = await service.create_shortened_url(
             user_id=user_id,
             original_url=url_data.original_url,
-            custom_alias=custom_alias
+            custom_alias=custom_alias,
+            expires_at=url_data.expires_at
         )
         
         if not success:

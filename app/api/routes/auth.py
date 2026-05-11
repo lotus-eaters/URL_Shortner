@@ -4,6 +4,7 @@ Handles HTTP requests and responses for user operations
 """
 
 import logging
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import HTTPBearer
 from app.core.database import get_mongodb
@@ -127,8 +128,8 @@ async def login(
             user=UserResponse(
                 id=token_data["user_id"],
                 email=token_data["email"],
-                username=token_data["username"],
-                created_at=token_data["created_at"]
+                username=token_data.get("username", ""),
+                created_at=token_data.get("created_at", datetime.now(timezone.utc))
             )
         )
         
