@@ -168,6 +168,91 @@ async def redirect_to_url(
 
 
 @router.get(
+    "/user/list",
+    response_model=URLListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="List user's shortened URLs",
+    responses={
+        200: {"description": "URLs listed successfully"},
+        401: {"description": "Not authenticated"},
+        500: {"description": "Internal server error"}
+    }
+)
+async def list_user_urls(
+    current_user: dict = Depends(get_current_user),
+    db = Depends(get_mongodb),
+    limit: int = Query(50, ge=1, le=100),
+    skip: int = Query(0, ge=0)
+) -> URLListResponse:
+    """
+    List all shortened URLs for the current user
+    
+    - **limit**: Number of results to return (default: 50, max: 100)
+    - **skip**: Number of results to skip (default: 0)
+    
+    Returns:
+        URLListResponse: List of user's shortened URLs
+        
+    Raises:
+        HTTPException: If user not authenticated
+        
+    Example:
+        GET /api/urls/user/list?limit=50&skip=0
+        
+        Response:
+        {
+          "urls": [
+            {
+              "short_code": "abc123",
+              "original_url": "https://www.example.com",
+              "click_count": 5,
+              "created_at": "2024-01-15T10:30:00",
+              "is_active": true
+            }
+          ],
+          "total": 10,
+          "limit": 50,
+          "skip": 0
+        }
+    """
+    try:
+        service = URLService(db)
+        user_id = current_user["user_id"]
+        
+        success, message, data = await service.get_user_urls(
+            user_id=user_id,
+            limit=limit,
+            skip=skip
+        )
+        
+        if not success:
+            logger.warning(f"Failed to list URLs for user {user_id}: {message}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=message
+            )
+        
+        urls_list = data.get("urls", [])
+        total = data.get("total", 0)
+        
+        logger.info(f"Listed {len(urls_list)} URLs for user {user_id}")
+        
+        return URLListResponse(
+            urls=urls_list,
+            total=total
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error listing URLs: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to list URLs"
+        )
+
+
+@router.get(
     "/stats/{short_code}",
     response_model=URLStatsResponse,
     status_code=status.HTTP_200_OK,
@@ -230,96 +315,6 @@ async def get_url_stats(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get statistics"
-        )
-
-
-@router.get(
-    "/user/list",
-    response_model=URLListResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Get user's shortened URLs",
-    responses={
-        200: {"description": "URLs retrieved"},
-        401: {"description": "Not authenticated"}
-    }
-)
-async def list_user_urls(
-    limit: int = Query(50, ge=1, le=100),
-    skip: int = Query(0, ge=0),
-    current_user: dict = Depends(get_current_user),
-    db = Depends(get_mongodb)
-) -> URLListResponse:
-    """
-    Get all shortened URLs created by the current user
-    
-    - **limit**: Maximum number of results (1-100, default 50)
-    - **skip**: Number of results to skip (pagination)
-    
-    Returns:
-        URLListResponse: List of user's shortened URLs with metadata
-        
-    Raises:
-        HTTPException: If not authenticated
-        
-    Example:
-        GET /api/urls/user/list?limit=10&skip=0
-        
-        Response:
-        {
-          "total": 42,
-          "urls": [
-            {
-              "_id": "507f1f77bcf86cd799439012",
-              "short_code": "abc123",
-              "original_url": "https://...",
-              "user_id": "507f1f77bcf86cd799439011",
-              "click_count": 5,
-              "created_at": "2024-01-15T10:30:00",
-              "is_active": true
-            },
-            ...
-          ]
-        }
-    """
-    try:
-        service = URLService(db)
-        user_id = current_user["user_id"]
-        
-        success, message, data = await service.get_user_urls(
-            user_id=user_id,
-            limit=limit,
-            skip=skip
-        )
-        
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=message
-            )
-        
-        # Convert URL objects to URLDetailResponse
-        urls = [
-            URLDetailResponse(
-                id=str(url.id),
-                short_code=url.short_code,
-                original_url=url.original_url,
-                user_id=str(url.user_id),
-                click_count=url.click_count,
-                created_at=url.created_at,
-                is_active=url.is_active
-            )
-            for url in data["urls"]
-        ]
-        
-        return URLListResponse(total=data["total"], urls=urls)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error listing user URLs: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list URLs"
         )
 
 

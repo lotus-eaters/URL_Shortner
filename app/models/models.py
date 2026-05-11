@@ -3,7 +3,7 @@ MongoDB Models
 Pydantic models for database documents
 """
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import Optional
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -43,7 +43,7 @@ class UserCreate(UserBase):
 class User(UserBase):
     """User model for database"""
     # Inherited from UserBase: email, username
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    id: Optional[ObjectId] = Field(alias="_id", default=None)
     hashed_password: str
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -79,8 +79,8 @@ class URLCreate(URLBase):
 
 class URL(URLCreate):
     """URL model for database - inherits all creation fields plus database metadata"""
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    user_id: PyObjectId
+    id: Optional[ObjectId] = Field(alias="_id", default=None)
+    user_id: ObjectId
     click_count: int = 0
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)

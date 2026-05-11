@@ -127,8 +127,8 @@ async def login(
             user=UserResponse(
                 id=token_data["user_id"],
                 email=token_data["email"],
-                username=token_data.get("username", ""),
-                created_at=None  # Can be retrieved if needed
+                username=token_data["username"],
+                created_at=token_data["created_at"]
             )
         )
         

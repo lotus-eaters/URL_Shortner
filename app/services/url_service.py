@@ -319,3 +319,49 @@ class URLService:
         except Exception as e:
             logger.error(f"Error getting URL stats: {str(e)}")
             return False, f"Error: {str(e)}", None
+    
+    async def get_user_urls(
+        self,
+        user_id: str,
+        limit: int = 50,
+        skip: int = 0
+    ) -> Tuple[bool, str, Optional[dict]]:
+        """
+        Get all shortened URLs for a user
+        
+        Args:
+            user_id (str): User ID
+            limit (int): Number of results to return
+            skip (int): Number of results to skip (for pagination)
+            
+        Returns:
+            Tuple[bool, str, Optional[dict]]: (success, message, data_dict)
+        """
+        try:
+            urls = await self.repository.get_urls_by_user_id(
+                user_id=user_id,
+                limit=limit,
+                skip=skip
+            )
+            
+            if not urls:
+                return True, "No URLs found", {"urls": [], "total": 0}
+            
+            urls_list = [
+                {
+                    "_id": str(url.id),
+                    "short_code": url.short_code,
+                    "original_url": url.original_url,
+                    "user_id": str(url.user_id),
+                    "click_count": url.click_count,
+                    "created_at": url.created_at,
+                    "is_active": url.is_active
+                }
+                for url in urls
+            ]
+            
+            return True, "URLs retrieved", {"urls": urls_list, "total": len(urls_list)}
+            
+        except Exception as e:
+            logger.error(f"Error getting user URLs: {str(e)}")
+            return False, f"Error: {str(e)}", None
